@@ -1,24 +1,43 @@
 name: Docker CI
+
 on: push
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build the docker image
+      - name: Build the Docker image
         run: docker build -t nginx-demo .
 
       - name: Run the container
         run: docker run -d -p 8080:80 --name test-nginx nginx-demo
 
-      - name: wait a moment
+      - name: Wait a moment
         run: sleep 3
-        
+
       - name: Test the site responds
         run: curl http://localhost:8080
 
-      - name: stop and remove the container
-        run: docker rm -f test-nginx    
+      - name: Stop and remove the container
+        run: docker rm -f test-nginx
+
+  deploy:
+    needs: build-and-test
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Stop old container if running
+        run: docker rm -f nginx-live || true
+
+      - name: Build the image on the server
+        run: docker build -t nginx-demo .
+
+      - name: Run the live container
+        run: docker run -d -p 80:80 --name nginx-live nginx-demo
