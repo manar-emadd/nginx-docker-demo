@@ -1,0 +1,24 @@
+name: Docker CI
+on: push
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build the docker image
+        run: docker build -t nginx-demo .
+
+      - name: Run the container
+        run: docker run -d -p 8080:80 --name test-nginx nginx-demo
+
+      - name: wait a moment
+        run: sleep 3
+        
+      - name: Test the site responds
+        run: curl http://localhost:8080
+
+      - name: stop and remove the container
+        run: docker rm -f test-nginx    
